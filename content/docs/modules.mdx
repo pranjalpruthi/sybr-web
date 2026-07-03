@@ -1,0 +1,25 @@
+---
+title: Pipeline Modules
+description: Detailed breakdown of the Sybr pipeline modules.
+icon: Blocks
+---
+
+Sybr consists of five primary modular stages. You can control which stages run using the `run_sybr_config.yaml`.
+
+## 1. Synteny Processing
+Synteny processing is the foundational step. It takes Satsuma pairwise alignments (`.txt`) and your sequence lengths to discover conserved genomic blocks across multiple species.
+
+## 2. EBA Analysis
+The Evolutionary Breakpoint Analysis (EBA) module pinpoints precise locations where genomic rearrangements have occurred over evolutionary time.
+- Requires: `classification.eba` and `chr_size.txt`
+- Controlled by: `eba: { n, p, r }` parameters.
+
+## 3. Enrichment Analysis (getENRICH)
+Performs functional KEGG enrichment on the identified regions to understand the functional impact of structural changes.
+- Requires: KEGG annotation file (`3kegg_annotationTOgenes.txt`) if using custom lists.
+
+## 4. ChainNet Generation
+Prepares hierarchical alignments (Chains and Nets) required for ancestor reconstruction from `LastZ_alignments`.
+
+## 5. Ancestor Reconstruction
+Utilizes DESCHRAMBLER algorithms to infer the genomic organization of common ancestors based on descendant and outgroup alignments. Uses the `tree.txt` to navigate the phylogeny.

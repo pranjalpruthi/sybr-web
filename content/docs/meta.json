@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "index",
+    "installation",
+    "configuration",
+    "input-format",
+    "modules"
+  ]
+}

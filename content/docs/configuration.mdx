@@ -1,0 +1,81 @@
+---
+title: Configuration & Usage
+description: How to run Sybr and configure the run_sybr_config.yaml file.
+icon: Settings
+---
+
+Sybr's workflow is controlled via a `run_sybr_config.yaml` file, allowing you to selectively run different analysis stages.
+
+## Configuration File
+
+The primary configuration block allows you to specify inputs, outputs, and toggle pipeline stages.
+
+```yaml
+# ─────────────────────────────────────────────
+#  run_sybr_config.yaml  —  User-facing config
+#  Edit this file to control pipeline behaviour
+# ─────────────────────────────────────────────
+
+# ── Base I/O directories ────────────────────
+base_input_dir:  "/path/to/sybr/inputs"
+base_output_dir: "/path/to/sybr/outputs"
+
+# ── Pipeline stages to run ──────────────────
+run_stages:
+  synteny_processing: true
+  eba_analysis: true
+  enrichment_analysis: true
+  chainNet_generation: true
+  Ancestor_seq_recunstruction: true
+
+# ── Species / reference names ───────────────
+reference_name: "Adineta_vaga"
+reference_species: "vaga"
+
+# ── EBA parameters (user-facing) ────────────
+eba:
+  n: 5           # number of EBA iterations
+  r: "Adineta_vaga"  # reference species name
+  p: 300         # primary resolution parameter
+
+# ── Enrichment KEGG options ─────────────────
+getenrich:
+  r: "ko"  # KEGG code, or model-organism code
+```
+
+## Basic CLI Usage
+
+Run the pipeline using the provided wrapper script:
+
+```bash
+./sybr.sh -c run_sybr_config.yaml -j 8
+```
+
+You can also run it with a "clean" `-C` flag to automatically delete intermediate files after the run finishes successfully:
+
+```bash
+./sybr.sh -j 8 -C
+```
+
+## Custom Synteny Parameters
+
+You can specify custom window sizes and step sizes for the synteny assignment block directly from the command line:
+
+```bash
+./sybr.sh -w 200000,400000,500000 -p 50000 -j 8
+```
+
+> [!NOTE]
+> Window sizes and step size only affect synteny assignment rules. If not specified, defaults are: window sizes = `100000,300000,500000` and step size = `30000`.
+
+## Help Menu
+
+```text
+Options:
+  -c, --config FILE      Configuration file (default: run_sybr_config.yaml)
+  -j, --cores N          Number of cores (default: all available)
+  -l, --log FILE         Log output to file
+  -C, --clean            Remove intermediate files after successful completion
+  -w, --window-sizes     Comma-separated window sizes in bp
+  -p, --step-size        Step size in bp for synteny assignment
+```

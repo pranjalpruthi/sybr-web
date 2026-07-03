@@ -1,0 +1,61 @@
+---
+title: Input Data Formatting
+description: Structuring your directories and files for Sybr.
+icon: FolderTree
+---
+
+Sybr requires a strictly structured input directory. The pipeline looks for files by specific names or extensions within this structure.
+
+## Directory Tree
+
+```
+inputs/
+│
+├── Ancestor_seq_recunstruction/
+│   ├── LastZ_alignments/
+│   │   ├── habrotrocha.axt
+│   │   └── vagaN.axt
+│   ├── seq/
+│   │   ├── habrotrocha.fa
+│   │   └── refSpecies.fa
+│   ├── species_info.txt
+│   └── tree.txt
+│
+├── eba_analysis/
+│   ├── chr_size.txt
+│   ├── classification.eba
+│   └── reference.fasta
+│
+├── enrichment_analysis/
+│   ├── 3kegg_annotationTOgenes.txt
+│   └── protein_annotation.tsv
+│
+└── synteny_processing/
+    ├── all_sequence_lengths.txt
+    ├── Satsuma_alignments/
+    │   └── Adineta_ricciae.txt
+    └── Scaffolds.txt
+```
+
+> [!IMPORTANT]
+> Files denoted as "fixed filename" must use the exact name shown; the pipeline looks for them explicitly. "Variable" files (like alignments) accept any filename.
+
+## File Specifications
+
+### `LastZ_alignments/*.axt`
+AXT alignment files from LastZ. The stem of each `.axt` filename **must match** the names used in `seq/`, `species_info.txt`, and `tree.txt`.
+
+### `seq/*.fa`
+Standard FASTA format (accepts `.fa`, `.fasta`, `.fna`). Both query and reference genomes must be present.
+
+### `species_info.txt`
+Three space/tab-separated fields per line, with no header:
+1. **Species name**: must match exactly
+2. **Role**: `0` = reference, `1` = descendant, `2` = outgroup
+3. **Assembly level**: `1` = chromosome-scale, `0` = scaffold-level
+
+### `tree.txt`
+Newick format, single line. Must start with `(` and end with `;`.
+
+### `all_sequence_lengths.txt`
+Three-column TSV: `sequence_name length_bp species`. Generate this using a genome length maker script.

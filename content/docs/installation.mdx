@@ -1,0 +1,47 @@
+---
+title: Installation
+description: How to install Sybr and its dependencies.
+icon: Download
+---
+
+## Prerequisites
+
+This project requires **Conda** to manage dependencies. If you do not have Conda installed, please follow a guide to install Miniconda or Anaconda on your system.
+
+To check if Conda is already installed, open a terminal and run:
+
+```bash
+conda --version
+```
+
+## Installation Steps
+
+### 1. Clone the Repository
+Clone the project from GitHub using the following command:
+
+```bash
+git clone https://github.com/BioinformaticsOnLine/sybr.git
+```
+
+### 2. Set File Permissions
+Grant the necessary permissions to all files and directories:
+
+```bash
+cd sybr
+chmod -R 777 .
+```
+
+### 3. Create Conda Environment
+Install all required dependencies by creating the Conda environment from the provided YML file. The environment file relies on Bioconda packages, including the custom `eba3`.
+
+```bash
+conda env create -f install_sybr_dependence.yml
+```
+
+### 4. Activate Conda Environment
+
+Activate the environment before running any analysis:
+
+```bash
+conda activate sybr
+```
