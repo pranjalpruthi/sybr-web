@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { ChevronDown, Mail, ScrollText, Settings2, Package, Square, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  FileUp,
+  Mail,
+  ScrollText,
+  Settings2,
+  Package,
+  Square,
+  Trash2,
+} from 'lucide-react';
 import type { JobResponse } from '@/lib/sybr-api';
-import { sybrApi, formatTime } from '@/lib/sybr-api';
-import { useJobLogs } from '@/hooks/use-sybr';
+import { sybrApi, formatBytes, formatTime, stripAnsi } from '@/lib/sybr-api';
+import { useJobFiles, useJobLogs } from '@/hooks/use-sybr';
 import { StatusBadge } from '@/components/sybr/status-badge';
 import { Alert, Card, ProgressBar } from '@/components/sybr/primitives';
 import { ResultsBrowser } from '@/components/sybr/results-browser';
@@ -16,7 +25,7 @@ import {
 } from '@/components/animate-ui/components/radix/tabs';
 import { cn } from '@/lib/utils';
 
-type DetailTab = 'logs' | 'config' | 'results';
+type DetailTab = 'logs' | 'config' | 'files' | 'results';
 
 export function JobCard({
   apiKey,
@@ -39,6 +48,11 @@ export function JobCard({
   const logs = useJobLogs(apiKey, job.job_id, 80, {
     enabled: expanded && tab === 'logs',
     pollMs: expanded && tab === 'logs' && isRunning ? 5000 : undefined,
+  });
+
+  const files = useJobFiles(apiKey, job.job_id, {
+    enabled: expanded && tab === 'files',
+    pollMs: expanded && tab === 'files' && isRunning ? 8000 : undefined,
   });
 
   const handleAction = async () => {
@@ -122,6 +136,10 @@ export function JobCard({
                 <Settings2 className="h-4 w-4" />
                 Config
               </TabsTrigger>
+              <TabsTrigger value="files">
+                <FileUp className="h-4 w-4" />
+                Input Files
+              </TabsTrigger>
               <TabsTrigger value="results">
                 <Package className="h-4 w-4" />
                 Results
@@ -134,7 +152,7 @@ export function JobCard({
                   <p className="text-sm text-muted-foreground">Loading logs…</p>
                 ) : logs.data?.pipeline_log ? (
                   <pre className="max-h-96 overflow-auto rounded-lg bg-foreground/5 p-3 font-mono text-xs leading-relaxed text-foreground">
-                    {logs.data.pipeline_log}
+                    {stripAnsi(logs.data.pipeline_log)}
                   </pre>
                 ) : (
                   <Alert variant="info">No log output yet.</Alert>
@@ -149,6 +167,34 @@ export function JobCard({
                   </pre>
                 ) : (
                   <Alert variant="info">No configuration recorded.</Alert>
+                )}
+              </TabsContent>
+
+              <TabsContent value="files">
+                {files.isLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading files…</p>
+                ) : files.error ? (
+                  <Alert variant="warning">Could not load files: {files.error}</Alert>
+                ) : files.data && files.data.files.length > 0 ? (
+                  <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+                    {files.data.files.map((f) => (
+                      <li
+                        key={`${f.category}/${f.name}`}
+                        className="flex items-center gap-3 px-3 py-2 text-sm"
+                      >
+                        <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1 truncate font-mono">{f.name}</span>
+                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          {f.category}
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {formatBytes(f.size_bytes)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <Alert variant="info">No input files uploaded for this job.</Alert>
                 )}
               </TabsContent>
 

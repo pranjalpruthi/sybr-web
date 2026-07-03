@@ -123,10 +123,31 @@ export interface FileUploadResponse {
   message: string;
 }
 
+export interface FileInfo {
+  name: string;
+  category: string;
+  size_bytes: number;
+  uploaded_at?: string | null;
+}
+
+export interface FileListResponse {
+  job_id: string;
+  files: FileInfo[];
+  total: number;
+}
+
 export interface AuthVerifyResponse {
   valid: boolean;
   key_name: string;
   permissions: string;
+}
+
+export interface HealthResponse {
+  status: string;
+  version: string;
+  pipeline_dir: string;
+  jobs_dir: string;
+  active_jobs: number;
 }
 
 // ── Error handling ───────────────────────────────────────────────────────────
@@ -190,6 +211,8 @@ async function request<T>(
 // ── Endpoints ────────────────────────────────────────────────────────────────
 
 export const sybrApi = {
+  health: (apiKey: string) => request<HealthResponse>(apiKey, '/health'),
+
   verifyKey: (apiKey: string) => request<AuthVerifyResponse>(apiKey, '/auth/verify'),
 
   createJob: (apiKey: string, payload: JobSubmitRequest) =>
@@ -221,24 +244,63 @@ export const sybrApi = {
       method: 'DELETE',
     }),
 
+  listFiles: (apiKey: string, jobId: string) =>
+    request<FileListResponse>(apiKey, `/jobs/${encodeURIComponent(jobId)}/files`),
+
   listResults: (apiKey: string, jobId: string, path = '') =>
     request<ResultListResponse>(
       apiKey,
       `/jobs/${encodeURIComponent(jobId)}/results${path ? `?path=${encodeURIComponent(path)}` : ''}`,
     ),
 
-  async uploadFile(
+  /**
+   * Upload a file with real-time progress.
+   *
+   * Uses `XMLHttpRequest` (not `fetch`) because it's the only browser API that
+   * exposes upload byte-progress events. `onProgress` receives loaded/total
+   * bytes for the current file.
+   */
+  uploadFile(
     apiKey: string,
     jobId: string,
     category: FileCategory,
     file: File,
+    onProgress?: (loaded: number, total: number) => void,
   ): Promise<FileUploadResponse> {
-    const form = new FormData();
-    form.append('category', category);
-    form.append('file', file, file.name);
-    return request<FileUploadResponse>(apiKey, `/jobs/${encodeURIComponent(jobId)}/upload`, {
-      method: 'POST',
-      body: form,
+    return new Promise<FileUploadResponse>((resolve, reject) => {
+      const form = new FormData();
+      form.append('category', category);
+      form.append('file', file, file.name);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE}/jobs/${encodeURIComponent(jobId)}/upload`);
+      xhr.setRequestHeader('X-API-Key', apiKey);
+      // Note: do NOT set Content-Type — the browser adds the multipart boundary.
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) onProgress?.(event.loaded, event.total);
+      };
+
+      xhr.onload = () => {
+        let body: unknown = null;
+        try {
+          body = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        } catch {
+          body = { detail: xhr.responseText };
+        }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onProgress?.(file.size, file.size);
+          resolve(body as FileUploadResponse);
+        } else {
+          reject(new SybrApiError(detailFrom(body, `Upload failed (${xhr.status})`), xhr.status));
+        }
+      };
+
+      xhr.onerror = () =>
+        reject(new SybrApiError('Network error during upload — is the API reachable?', 0));
+      xhr.onabort = () => reject(new SybrApiError('Upload cancelled', 0));
+
+      xhr.send(form);
     });
   },
 
@@ -264,6 +326,18 @@ export function formatTime(iso?: string | null): string {
     hour: 'numeric',
     minute: '2-digit',
   });
+}
+
+/**
+ * Strip ANSI escape / control sequences from pipeline log output so it renders
+ * cleanly in a plain <pre> block. The Snakemake pipeline emits colour codes and
+ * cursor-movement sequences that would otherwise show up as noise.
+ */
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentionally matching ANSI control codes.
+const ANSI_PATTERN = /[\u001b\u009b][[()#;?]*(?:\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-nq-uy=><~]/g;
+
+export function stripAnsi(input: string): string {
+  return input.replace(ANSI_PATTERN, '');
 }
 
 export function formatBytes(raw?: number | null): string {

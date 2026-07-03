@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CheckCheck, Copy, Rocket } from 'lucide-react';
 import type { FileCategory, JobSubmitRequest } from '@/lib/sybr-api';
-import { sybrApi, SybrApiError } from '@/lib/sybr-api';
+import { sybrApi, SybrApiError, formatBytes } from '@/lib/sybr-api';
 import {
   Alert,
   Card,
@@ -39,12 +39,24 @@ type Uploads = Partial<Record<FileCategory, File[]>>;
 
 interface SubmitProgress {
   phase: 'idle' | 'creating' | 'uploading' | 'starting' | 'done' | 'error';
-  uploaded: number;
-  total: number;
+  uploaded: number; // completed file count
+  total: number; // total file count
   currentFile?: string;
+  currentPercent: number; // 0–100 for the file currently uploading
+  bytesUploaded: number; // cumulative bytes sent across all files
+  bytesTotal: number; // total bytes to send across all files
   jobId?: string;
   errorMessage?: string;
 }
+
+const IDLE_PROGRESS: SubmitProgress = {
+  phase: 'idle',
+  uploaded: 0,
+  total: 0,
+  currentPercent: 0,
+  bytesUploaded: 0,
+  bytesTotal: 0,
+};
 
 export function SubmitJob({ apiKey }: { apiKey: string }) {
   const [jobName, setJobName] = useState('sybr_analysis');
@@ -64,10 +76,11 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
   const [windowInput, setWindowInput] = useState('30,60,90');
   const [stepSize, setStepSize] = useState(3);
   const [ebaP, setEbaP] = useState(60);
+  const [enrichR, setEnrichR] = useState('ko');
 
   const [uploads, setUploads] = useState<Uploads>({});
   const [errors, setErrors] = useState<string[]>([]);
-  const [progress, setProgress] = useState<SubmitProgress>({ phase: 'idle', uploaded: 0, total: 0 });
+  const [progress, setProgress] = useState<SubmitProgress>(IDLE_PROGRESS);
   const [copied, setCopied] = useState(false);
 
   // ── Dependency enforcement (mirrors the Streamlit force-off logic) ──────────
@@ -115,6 +128,10 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
   const needFasta = stages.synteny || stages.chainnet || stages.eba;
   const isSubmitting =
     progress.phase === 'creating' || progress.phase === 'uploading' || progress.phase === 'starting';
+  const overallPercent =
+    progress.bytesTotal > 0
+      ? Math.min(100, (progress.bytesUploaded / progress.bytesTotal) * 100)
+      : 0;
 
   // ── Submit flow ──────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
@@ -160,6 +177,7 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
         r: referenceName,
         p: stages.eba ? ebaP : 300,
       },
+      getenrich: { r: (enrichR.trim() || 'ko') },
       window_sizes: windowSizes,
       step_size: stepSize * 1000,
       cores: 6,
@@ -170,23 +188,56 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
       for (const file of files ?? []) allFiles.push({ category: category as FileCategory, file });
     }
 
+    const bytesTotal = allFiles.reduce((sum, { file }) => sum + file.size, 0);
+
     try {
-      setProgress({ phase: 'creating', uploaded: 0, total: allFiles.length });
+      setProgress({
+        ...IDLE_PROGRESS,
+        phase: 'creating',
+        total: allFiles.length,
+        bytesTotal,
+      });
       const created = await sybrApi.createJob(apiKey, payload);
       const jobId = created.job_id;
 
-      setProgress({ phase: 'uploading', uploaded: 0, total: allFiles.length, jobId });
+      setProgress((p) => ({ ...p, phase: 'uploading', jobId }));
+
+      let completedBytes = 0;
       for (let i = 0; i < allFiles.length; i++) {
         const { category, file } = allFiles[i];
-        setProgress((p) => ({ ...p, uploaded: i, currentFile: `${file.name} (${category})` }));
-        await sybrApi.uploadFile(apiKey, jobId, category, file);
+        setProgress((p) => ({
+          ...p,
+          uploaded: i,
+          currentFile: `${file.name} (${category})`,
+          currentPercent: 0,
+        }));
+        await sybrApi.uploadFile(apiKey, jobId, category, file, (loaded, total) => {
+          const pct = total > 0 ? (loaded / total) * 100 : 0;
+          setProgress((p) => ({
+            ...p,
+            currentPercent: pct,
+            bytesUploaded: Math.min(bytesTotal, completedBytes + loaded),
+          }));
+        });
+        completedBytes += file.size;
+        setProgress((p) => ({
+          ...p,
+          uploaded: i + 1,
+          currentPercent: 100,
+          bytesUploaded: completedBytes,
+        }));
       }
-      setProgress((p) => ({ ...p, uploaded: allFiles.length, currentFile: undefined }));
+      setProgress((p) => ({
+        ...p,
+        currentFile: undefined,
+        currentPercent: 100,
+        bytesUploaded: bytesTotal,
+      }));
 
       setProgress((p) => ({ ...p, phase: 'starting' }));
       await sybrApi.startJob(apiKey, jobId);
 
-      setProgress({ phase: 'done', uploaded: allFiles.length, total: allFiles.length, jobId });
+      setProgress((p) => ({ ...p, phase: 'done', uploaded: allFiles.length, jobId }));
     } catch (err) {
       const message =
         err instanceof SybrApiError ? err.message : err instanceof Error ? err.message : 'Submission failed';
@@ -227,10 +278,7 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
         <Alert variant="info">
           Use the <strong>Check Job</strong> tab to monitor progress and download results.
         </Alert>
-        <Button
-          variant="secondary"
-          onClick={() => setProgress({ phase: 'idle', uploaded: 0, total: 0 })}
-        >
+        <Button variant="secondary" onClick={() => setProgress(IDLE_PROGRESS)}>
           Submit another job
         </Button>
       </Card>
@@ -410,14 +458,33 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
         ) : null}
 
         {stages.enrich ? (
-          <FileDrop
-            id="annotation"
-            label="③ Protein annotation file"
-            accept=".tsv"
-            files={uploads.annotation ?? []}
-            onChange={(f) => setUpload('annotation', f)}
-            hint="protein_annotation.tsv"
-          />
+          <div className="space-y-4">
+            <Field
+              label="KEGG organism code (getenrich r)"
+              hint="KEGG organism code (e.g. hsa, mmu) or 'ko' for the reference orthology."
+              className="md:max-w-xs"
+            >
+              <TextInput value={enrichR} onChange={(e) => setEnrichR(e.target.value)} />
+            </Field>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FileDrop
+                id="annotation"
+                label="③ Protein annotation file"
+                accept=".tsv"
+                files={uploads.annotation ?? []}
+                onChange={(f) => setUpload('annotation', f)}
+                hint="protein_annotation.tsv"
+              />
+              <FileDrop
+                id="kegg"
+                label="KEGG annotation map (optional)"
+                accept=".txt"
+                files={uploads.kegg ?? []}
+                onChange={(f) => setUpload('kegg', f)}
+                hint="3kegg_annotationTOgenes.txt — KEGG gene mapping."
+              />
+            </div>
+          </div>
         ) : null}
 
         {stages.chainnet ? (
@@ -483,22 +550,51 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
 
       {/* Submit progress */}
       {isSubmitting ? (
-        <Card className="space-y-2 p-4">
-          <p className="text-sm font-medium text-foreground">
-            {progress.phase === 'creating' && 'Creating job…'}
-            {progress.phase === 'uploading' &&
-              (progress.currentFile ? `Uploading ${progress.currentFile}…` : 'Uploading files…')}
-            {progress.phase === 'starting' && 'Starting pipeline…'}
-          </p>
-          <ProgressBar
-            value={
-              progress.total > 0
-                ? (progress.uploaded / progress.total) * 100
-                : progress.phase === 'starting'
-                  ? 100
-                  : 10
-            }
-          />
+        <Card className="space-y-3 p-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <p className="font-medium text-foreground">
+              {progress.phase === 'creating' && 'Creating job…'}
+              {progress.phase === 'uploading' && 'Uploading input files…'}
+              {progress.phase === 'starting' && 'Starting pipeline…'}
+            </p>
+            {progress.phase === 'uploading' && progress.total > 0 ? (
+              <span className="shrink-0 text-muted-foreground">
+                {progress.uploaded}/{progress.total} files
+              </span>
+            ) : null}
+          </div>
+
+          {progress.phase === 'uploading' && progress.bytesTotal > 0 ? (
+            <div className="space-y-3">
+              {/* Overall byte progress */}
+              <div className="space-y-1">
+                <ProgressBar value={overallPercent} />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{Math.round(overallPercent)}% overall</span>
+                  <span className="font-mono">
+                    {formatBytes(progress.bytesUploaded)} / {formatBytes(progress.bytesTotal)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Current file progress */}
+              {progress.currentFile ? (
+                <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="min-w-0 flex-1 truncate font-mono text-foreground">
+                      {progress.currentFile}
+                    </span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {Math.round(progress.currentPercent)}%
+                    </span>
+                  </div>
+                  <ProgressBar value={progress.currentPercent} />
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <ProgressBar value={progress.phase === 'starting' ? 100 : 10} />
+          )}
         </Card>
       ) : null}
 

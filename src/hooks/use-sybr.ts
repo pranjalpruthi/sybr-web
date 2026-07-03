@@ -11,6 +11,8 @@ import {
   sybrApi,
   SybrApiError,
   type AuthVerifyResponse,
+  type FileListResponse,
+  type HealthResponse,
   type JobListResponse,
   type JobLogsResponse,
   type JobResponse,
@@ -94,6 +96,25 @@ export function useVerifyKey(apiKey: string): AsyncResource<AuthVerifyResponse> 
     () => sybrApi.verifyKey(apiKey),
     [apiKey],
     { enabled: apiKey.length > 0 },
+  );
+}
+
+export function useHealth(apiKey: string, opts: AsyncOptions = {}): AsyncResource<HealthResponse> {
+  return useAsyncResource<HealthResponse>(() => sybrApi.health(apiKey), [apiKey], {
+    enabled: apiKey.length > 0,
+    ...opts,
+  });
+}
+
+export function useJobFiles(
+  apiKey: string,
+  jobId: string,
+  opts: AsyncOptions = {},
+): AsyncResource<FileListResponse> {
+  return useAsyncResource<FileListResponse>(
+    () => sybrApi.listFiles(apiKey, jobId),
+    [apiKey, jobId],
+    { enabled: Boolean(apiKey && jobId), ...opts },
   );
 }
 

@@ -1,9 +1,10 @@
 
 .source
 .tanstack
-
+.output
 *.DS_Store
 
+sybr-streamlit/
 # Logs
 logs
 *.log

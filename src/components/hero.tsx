@@ -1,97 +1,147 @@
 import { Link } from '@tanstack/react-router';
 import { motion } from 'motion/react';
-import ShinyButton from '@/components/animate-ui/components/buttons/shiny-button'; // Or similar button, I will just use standard ones if not available
+import { Layers, MousePointerClick } from 'lucide-react';
+import { GithubIcon } from '@/components/brand-icons';
+
+const YT_VIDEO_ID = '6mHRhnU-bII';
+const REPO_URL = 'https://github.com/BioinformaticsOnLine/Sybr';
+const APP_URL = 'http://sybr.igib.res.in/app';
+
+const updates = [
+  {
+    date: '2026-04-28',
+    title: 'Sybr Web Server Alpha',
+    description:
+      'Sybr is now available as a hosted web service at sybr.igib.res.in. Submit jobs, track results, and download outputs directly from your browser — no local installation required.',
+  },
+  {
+    date: '2026-03-15',
+    title: 'DESCHRAMBLER Integration',
+    description:
+      'Added ancestral genome reconstruction support via DESCHRAMBLER. Infer ancestral genomic organization directly from LastZ alignments using a dedicated pipeline stage.',
+  },
+  {
+    date: '2026-02-10',
+    title: 'Enrichment Analysis via getENRICH',
+    description:
+      'Integrated the getENRICH module for functional enrichment of identified EBRs and msHSBs.',
+  },
+];
+
+/** Full-bleed, muted, looping YouTube background video. */
+function VideoBackground() {
+  const src = `https://www.youtube-nocookie.com/embed/${YT_VIDEO_ID}?autoplay=1&mute=1&controls=0&loop=1&playlist=${YT_VIDEO_ID}&playsinline=1&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3`;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-[#0b1020]">
+      {/* 16:9 iframe scaled to always cover the section (like a CSS background-cover). */}
+      <iframe
+        title="SyBR background"
+        src={src}
+        allow="autoplay; encrypted-media"
+        className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.77vh] min-w-full -translate-x-1/2 -translate-y-1/2"
+        frameBorder={0}
+      />
+      {/* Dark overlay to keep foreground text legible (mirrors the Mobirise 0.6 overlay). */}
+      <div className="absolute inset-0 bg-black/65" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-background" />
+    </div>
+  );
+}
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-background pt-24 pb-32">
-      {/* Background Gradient Mesh */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute -top-[40%] -left-[10%] w-[70%] h-[70%] rounded-full bg-primary/20 blur-[120px]" />
-        <div className="absolute top-[20%] -right-[20%] w-[60%] h-[60%] rounded-full bg-cyan-500/20 blur-[120px]" />
-      </div>
+    <section className="relative flex min-h-[92vh] items-center overflow-hidden pt-28 pb-20 text-white">
+      <VideoBackground />
 
-      <div className="container relative z-10 mx-auto px-4 text-center max-w-5xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm font-medium mb-6 border border-border"
-        >
-          <span className="flex h-2 w-2 rounded-full bg-primary"></span>
-          Sybr Toolkit v1.0 Available
-        </motion.div>
+      <div className="container relative z-10 mx-auto px-4">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+          {/* Left: headline + actions */}
+          <div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="font-heading text-6xl font-bold tracking-tight md:text-8xl"
+            >
+              SyBR
+            </motion.h1>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-bold font-heading text-foreground mb-6 leading-tight tracking-tight"
-        >
-          Synteny Discovery. <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-500">
-            Ancestral Reconstruction.
-          </span>
-        </motion.h1>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="mt-4 max-w-2xl text-2xl font-semibold text-white/90 md:text-3xl"
+            >
+              Multi-species synteny analysis and ancestral genome reconstruction toolkit
+            </motion.h2>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto"
-        >
-          A powerful bioinformatics tool meticulously designed for the discovery of synteny blocks, the precise identification of evolutionary breakpoints, and robust ancestral genome reconstruction.
-        </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-6 max-w-2xl text-base leading-relaxed text-white/70 md:text-lg"
+            >
+              Automated pipeline for synteny analysis and ancestral genome reconstruction. Identifies
+              conserved genomic blocks and evolutionary breakpoints across multiple species. Integrates
+              EBA, DESCHRAMBLER, and getENRICH in a single modular workflow.
+            </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <Link
-            to="/analysis"
-            className="w-full sm:w-auto px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-lg hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)]"
-          >
-            Start Analysis
-          </Link>
-          <Link
-            to="/docs/$"
-            params={{ _splat: '' }}
-            className="w-full sm:w-auto px-8 py-3 rounded-lg bg-secondary text-secondary-foreground font-semibold text-lg hover:bg-secondary/80 transition-all border border-border"
-          >
-            Read Documentation
-          </Link>
-        </motion.div>
-
-        {/* Terminal Simulation */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.5 }}
-          className="mt-16 mx-auto max-w-3xl rounded-xl bg-[#0d1117] border border-border shadow-2xl overflow-hidden text-left"
-        >
-          <div className="flex items-center px-4 py-3 bg-[#161b22] border-b border-border">
-            <div className="flex gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500" />
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-            </div>
-            <div className="ml-4 text-xs text-gray-400 font-mono">bash</div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-10 flex flex-wrap items-center gap-4"
+            >
+              <Link
+                to="/analysis"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-7 py-3 text-lg font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:bg-primary/90"
+              >
+                <MousePointerClick className="h-5 w-5" />
+                Get Started
+              </Link>
+              <a
+                href={REPO_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-7 py-3 text-lg font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              >
+                <GithubIcon className="h-5 w-5" />
+                Github
+              </a>
+              <a
+                href="#workflow"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/30 px-7 py-3 text-lg font-semibold text-white transition-all hover:bg-white/10"
+              >
+                <Layers className="h-5 w-5" />
+                Workflow
+              </a>
+            </motion.div>
           </div>
-          <div className="p-4 font-mono text-sm leading-relaxed overflow-x-auto text-gray-300">
-            <div className="flex">
-              <span className="text-primary mr-2">$</span>
-              <span className="text-white">./sybr.sh -c run_sybr_config.yaml -j 8</span>
-            </div>
-            <div className="text-gray-500 mt-2">Starting Sybr Pipeline...</div>
-            <div className="text-gray-400">[1/5] Synteny Processing  ✓</div>
-            <div className="text-gray-400">[2/5] EBA Analysis        ✓</div>
-            <div className="text-gray-400">[3/5] Enrichment Analysis ✓</div>
-            <div className="text-cyan-400 mt-2">Pipeline execution complete in 42s.</div>
-          </div>
-        </motion.div>
+
+          {/* Right: recent updates panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-md"
+          >
+            <h3 className="mb-5 text-lg font-semibold text-white">Recent Updates</h3>
+            <ul className="space-y-5">
+              {updates.map((u) => (
+                <li key={u.date} className="border-l-2 border-primary/70 pl-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-primary">
+                    🔹 {u.date}
+                  </p>
+                  <p className="mt-1 font-semibold text-white">{u.title}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-white/70">{u.description}</p>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
 }
+
+export { APP_URL, REPO_URL };

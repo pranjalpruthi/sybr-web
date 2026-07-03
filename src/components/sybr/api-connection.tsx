@@ -1,5 +1,6 @@
-import { KeyRound, PlugZap, ShieldCheck, ShieldX } from 'lucide-react';
+import { Activity, KeyRound, PlugZap, ShieldCheck, ShieldX } from 'lucide-react';
 import type { AsyncResource } from '@/hooks/use-sybr';
+import { useHealth } from '@/hooks/use-sybr';
 import type { AuthVerifyResponse } from '@/lib/sybr-api';
 import { useSybrStore, setSybrState } from '@/lib/sybr-store';
 import { Alert, Field, TextInput } from '@/components/sybr/primitives';
@@ -13,8 +14,12 @@ export function ApiConnection({
   verify: AsyncResource<AuthVerifyResponse>;
   hasKey: boolean;
 }) {
-  const apiKey = useSybrStore((s) => s.apiKey);
+  const storeKey = useSybrStore((s) => s.apiKey);
+  const apiKey = storeKey;
   const { data, error, status, isLoading } = verify;
+
+  const connected = status === 200 && Boolean(data?.valid);
+  const health = useHealth(ENV_API_KEY || storeKey, { enabled: connected });
 
   return (
     <div className="space-y-3">
@@ -44,12 +49,21 @@ export function ApiConnection({
         isLoading ? (
           <p className="text-xs text-muted-foreground">Verifying…</p>
         ) : status === 200 && data?.valid ? (
-          <Alert variant="success">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Connected as <strong>{data.key_name}</strong>
-            </span>
-          </Alert>
+          <>
+            <Alert variant="success">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Connected as <strong>{data.key_name}</strong>
+              </span>
+            </Alert>
+            {health.data ? (
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Activity className="h-3.5 w-3.5 text-emerald-500" />
+                API v{health.data.version} · {health.data.active_jobs} active job
+                {health.data.active_jobs === 1 ? '' : 's'}
+              </p>
+            ) : null}
+          </>
         ) : (
           <Alert variant="error">
             <span className="flex items-center gap-1.5">

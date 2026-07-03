@@ -12,6 +12,12 @@ export function baseOptions(): BaseLayoutProps {
         </div>
       ),
     },
+    links: [
+      { text: 'Team', url: '/#team' },
+      { text: 'Workflow', url: '/#workflow' },
+      { text: 'Docs', url: '/landing/Sybr_Documentation.pdf', external: true },
+      { type: 'button', text: 'Start Analysis 🪄', url: '/analysis' },
+    ],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   };
 }
