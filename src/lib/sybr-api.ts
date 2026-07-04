@@ -33,7 +33,6 @@ export type FileCategory =
   | 'tree'
   | 'classification'
   | 'annotation'
-  | 'kegg'
   | 'hgt';
 
 export interface RunStages {
@@ -52,7 +51,6 @@ export interface JobSubmitRequest {
   reference_name: string;
   reference_species: string;
   eba: { n: number; r: string; p: number };
-  getenrich?: { r: string };
   window_sizes: number[];
   step_size: number;
   cores: number;

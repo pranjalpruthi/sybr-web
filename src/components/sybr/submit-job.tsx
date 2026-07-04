@@ -76,7 +76,6 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
   const [windowInput, setWindowInput] = useState('30,60,90');
   const [stepSize, setStepSize] = useState(3);
   const [ebaP, setEbaP] = useState(60);
-  const [enrichR, setEnrichR] = useState('ko');
 
   const [uploads, setUploads] = useState<Uploads>({});
   const [errors, setErrors] = useState<string[]>([]);
@@ -120,7 +119,10 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
   }, [windowInput]);
 
   const ebaN = uploads.satsuma_alignments?.length ?? 0;
-  const emailValid = !email || (/@/.test(email) && /\./.test(email.split('@').pop() ?? ''));
+  const emailValid =
+    email.trim().length > 0 &&
+    /@/.test(email) &&
+    /\./.test(email.split('@').pop() ?? '');
 
   const setUpload = (category: FileCategory, files: File[]) =>
     setUploads((prev) => ({ ...prev, [category]: files }));
@@ -136,6 +138,7 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
   // ── Submit flow ──────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     const errs: string[] = [];
+    if (!email.trim()) errs.push('Email address is required');
     if (!referenceName) errs.push('Reference name is required');
     if (!referenceSpecies) errs.push('Reference species is required');
     if (stages.synteny && !uploads.satsuma_alignments?.length)
@@ -161,7 +164,7 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
 
     const payload: JobSubmitRequest = {
       job_name: jobName,
-      email: email && email.includes('@') ? email.trim() : null,
+      email: email.trim(),
       run_stages: {
         synteny_processing: stages.synteny,
         eba_analysis: stages.eba,
@@ -177,7 +180,6 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
         r: referenceName,
         p: stages.eba ? ebaP : 300,
       },
-      getenrich: { r: (enrichR.trim() || 'ko') },
       window_sizes: windowSizes,
       step_size: stepSize * 1000,
       cores: 6,
@@ -306,17 +308,17 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
         </div>
         <Field
           label="Your Email Address"
-          hint="Optional — used for admin tracking and job-completion notifications."
+          hint="Required — used for admin tracking and job-completion notifications."
           className="md:max-w-md"
         >
           <TextInput
             type="email"
+            required
             value={email}
             placeholder="e.g. user@institution.edu"
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
-        {!emailValid ? <Alert variant="warning">Please enter a valid email address.</Alert> : null}
       </Card>
 
       {/* Stages */}
@@ -458,33 +460,14 @@ export function SubmitJob({ apiKey }: { apiKey: string }) {
         ) : null}
 
         {stages.enrich ? (
-          <div className="space-y-4">
-            <Field
-              label="KEGG organism code (getenrich r)"
-              hint="KEGG organism code (e.g. hsa, mmu) or 'ko' for the reference orthology."
-              className="md:max-w-xs"
-            >
-              <TextInput value={enrichR} onChange={(e) => setEnrichR(e.target.value)} />
-            </Field>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FileDrop
-                id="annotation"
-                label="③ Protein annotation file"
-                accept=".tsv"
-                files={uploads.annotation ?? []}
-                onChange={(f) => setUpload('annotation', f)}
-                hint="protein_annotation.tsv"
-              />
-              <FileDrop
-                id="kegg"
-                label="KEGG annotation map (optional)"
-                accept=".txt"
-                files={uploads.kegg ?? []}
-                onChange={(f) => setUpload('kegg', f)}
-                hint="3kegg_annotationTOgenes.txt — KEGG gene mapping."
-              />
-            </div>
-          </div>
+          <FileDrop
+            id="annotation"
+            label="③ Protein annotation file"
+            accept=".tsv"
+            files={uploads.annotation ?? []}
+            onChange={(f) => setUpload('annotation', f)}
+            hint="protein_annotation.tsv"
+          />
         ) : null}
 
         {stages.chainnet ? (
