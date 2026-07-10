@@ -3,8 +3,9 @@
 .tanstack
 .output
 *.DS_Store
-
+node_modules/
 sybr-streamlit/
+.env.example
 # Logs
 logs
 *.log

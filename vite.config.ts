@@ -38,7 +38,11 @@ export default defineConfig({
     }),
     react(),
     // please see https://tanstack.com/start/latest/docs/framework/react/guide/hosting#nitro for guides on hosting
-    nitro(),
+    nitro({
+      routeRules: {
+        '/api/v1/**': { proxy: 'http://127.0.0.1:8001/api/v1/**' },
+      },
+    }),
   ],
   resolve: {
     tsconfigPaths: true,

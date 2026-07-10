@@ -1,0 +1,15 @@
+Pull changes from remote to VM (use this regularly):
+
+rsync -avz --delete \
+  --exclude node_modules --exclude dist --exclude .output \
+  --exclude .env --exclude .env.local --exclude .git \
+  pranjal.p@192.168.25.76:/home/pranjal.p/sybr/Sybr3/Sybr/frontend/sybr-web/ \
+  /home/igib/Sybr/sybr-web/
+
+  Push VM changes to remote (only if you ever edit on VM first):
+
+rsync -avz \
+  --exclude node_modules --exclude dist --exclude .output \
+  --exclude .env --exclude .env.local --exclude .git \
+  /home/igib/Sybr/sybr-web/ \
+  pranjal.p@192.168.25.76:/home/pranjal.p/sybr/Sybr3/Sybr/frontend/sybr-web/

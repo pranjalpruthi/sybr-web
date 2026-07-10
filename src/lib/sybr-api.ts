@@ -162,7 +162,12 @@ export class SybrApiError extends Error {
 function detailFrom(body: unknown, fallback: string): string {
   if (body && typeof body === 'object' && 'detail' in body) {
     const detail = (body as { detail: unknown }).detail;
-    if (typeof detail === 'string') return detail;
+    if (typeof detail === 'string') {
+      if (/^\s*</.test(detail)) {
+        return 'API unreachable — got an HTML page instead of JSON. Is the backend running and /api/v1 proxied?';
+      }
+      return detail;
+    }
     return JSON.stringify(detail);
   }
   return fallback;
