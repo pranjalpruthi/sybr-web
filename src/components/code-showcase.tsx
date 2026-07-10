@@ -20,9 +20,6 @@ eba:
   n: 5
   r: "Adineta_vaga"
   p: 300
-
-getenrich:
-  r: "ko"
 `,
   cli: `# Clean run with specific window sizes and step size
 ./sybr.sh \\
@@ -51,7 +48,7 @@ export function CodeShowcase() {
               Powerful Execution.
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              Control the entire Sybr workflow through a single, elegant YAML configuration file. Execute locally or on your HPC cluster with our optimized Snakemake wrapper.
+              Control the entire SyBR workflow through a single, elegant YAML configuration file. Execute locally or on your HPC cluster with our optimized Snakemake wrapper.
             </p>
             <ul className="space-y-3 pt-4">
                {[

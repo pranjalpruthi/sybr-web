@@ -15,11 +15,11 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Sybr — Comparative Genomics & Synteny Analysis',
+        title: 'SyBR — Comparative Genomics & Synteny Analysis',
       },
       {
         name: 'description',
-        content: 'Sybr is a powerful bioinformatics tool meticulously designed for the discovery of synteny blocks, the precise identification of evolutionary breakpoints, and robust ancestral genome reconstruction.',
+        content: 'SyBR is a powerful bioinformatics tool meticulously designed for the discovery of synteny blocks, the precise identification of evolutionary breakpoints, and robust ancestral genome reconstruction.',
       },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],

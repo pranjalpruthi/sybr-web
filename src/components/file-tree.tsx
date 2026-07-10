@@ -9,7 +9,7 @@ export function FileTreeSection() {
           Structured Data Inputs
         </h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-16">
-          Sybr uses a clear, structured directory format ensuring reproducibility and organized project management.
+          SyBR uses a clear, structured directory format ensuring reproducibility and organized project management.
         </p>
 
         <div className="max-w-xl mx-auto text-left bg-background p-6 md:p-8 rounded-xl border border-border shadow-sm">

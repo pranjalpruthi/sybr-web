@@ -14,7 +14,7 @@ function Analysis() {
         <main className="container mx-auto max-w-7xl flex-1 px-4 py-10">
           <div className="mb-8">
             <h1 className="mb-3 text-4xl font-heading font-bold text-foreground">
-              Run Sybr Analysis
+              Run SyBR Analysis
             </h1>
             <p className="text-lg text-muted-foreground">
               Synteny block discovery · evolutionary breakpoint identification · ancestral genome

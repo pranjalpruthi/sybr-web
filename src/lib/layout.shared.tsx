@@ -7,7 +7,7 @@ export function baseOptions(): BaseLayoutProps {
       // JSX supported
       title: (
         <div className="flex items-center gap-2">
-          <img src="/logo-circle.png" alt="Sybr Logo" className="h-8 w-8 object-contain" />
+          <img src="/logo-circle.png" alt="SyBR Logo" className="h-8 w-8 object-contain" />
           <span className="font-semibold">{appName}</span>
         </div>
       ),

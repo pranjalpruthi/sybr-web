@@ -31,6 +31,13 @@ const team: Member[] = [
     image: '/landing/team-ajay.jpeg',
     href: 'https://www.researchgate.net/profile/Ajay-Bhatia-5',
   },
+  {
+    name: 'Anwesha De',
+    role: 'Senior Researcher',
+    focus: 'Computational genomics | AMR analytics',
+    image: '/landing/team-anwesha.jpeg',
+    href: 'https://www.linkedin.com/in/anwesha-de-csirigib/',
+  },
 ];
 
 export function TeamSection() {
@@ -49,7 +56,7 @@ export function TeamSection() {
           </a>
         </h2>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {team.map((m, i) => (
             <motion.a
               key={m.name}

@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 const supporters = [
   { name: 'CSIR IGIB', logo: '/landing/logo-igib.png', href: 'https://www.igib.res.in' },
   { name: 'AcSIR', logo: '/landing/logo-acsir.png', href: 'https://acsir.res.in' },
-  { name: 'The RF Foundation', logo: '/landing/logo-rf.webp', href: 'https://www.rockefellerfoundation.org' },
+  { name: 'University Grants Commission (UGC)', logo: '/landing/logo-ugc.webp', href: 'https://www.ugc.gov.in' },
 ];
 
 export function SupportedBy() {

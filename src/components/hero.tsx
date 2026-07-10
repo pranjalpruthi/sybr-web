@@ -10,9 +10,9 @@ const APP_URL = 'http://sybr.igib.res.in/app';
 const updates = [
   {
     date: '2026-04-28',
-    title: 'Sybr Web Server Alpha',
+    title: 'SyBR Web Server Alpha',
     description:
-      'Sybr is now available as a hosted web service at sybr.igib.res.in. Submit jobs, track results, and download outputs directly from your browser — no local installation required.',
+      'SyBR is now available as a hosted web service at sybr.igib.res.in. Submit jobs, track results, and download outputs directly from your browser — no local installation required.',
   },
   {
     date: '2026-03-15',
