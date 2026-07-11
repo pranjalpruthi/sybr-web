@@ -72,7 +72,7 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="mt-4 max-w-2xl text-2xl font-semibold text-white/90 md:text-3xl"
             >
-              Multi-species synteny analysis and ancestral genome reconstruction toolkit
+              Multi-species synteny analysis and ancestral genome reconstruction pipeline
             </motion.h2>
 
             <motion.p

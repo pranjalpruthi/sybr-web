@@ -38,7 +38,7 @@ export function FeatureCards() {
             Powerful Bioinformatics Features
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Everything you need for comprehensive comparative genomics in one unified toolkit.
+            Everything you need for comprehensive comparative genomics in one unified pipeline.
           </p>
         </div>
 
